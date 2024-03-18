@@ -17,6 +17,7 @@ const metaSchema = new mongoose.Schema({
     },
     valorAtual: {
         type: Number,
+        required: false,
         allowNull: true
     },
     user: Object
