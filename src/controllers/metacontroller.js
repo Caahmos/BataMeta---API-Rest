@@ -14,7 +14,7 @@ module.exports = class MetaController {
             const token = pegarToken(req);
             const user = await pegarUserPorToken(token);
 
-            const nomeExiste = await MetaModel.find({ $and: [{ nome: nome }, { 'user._id': user._id }] });
+            const nomeExiste = await MetaModel.findOne({ $and: [{ nome: nome }, { 'user._id': user._id }] });
             if (nomeExiste) return res.status(422).json({ message: 'Já existe uma meta com esse nome!' });
 
             const meta = new MetaModel({
@@ -57,13 +57,48 @@ module.exports = class MetaController {
             const token = pegarToken(req);
             const user = await pegarUserPorToken(token);
 
-            const meta = await MetaModel.findById(req.params.idMeta);
+            const meta = await MetaModel.findById(req.params.id);
             if (!meta) return res.status(422).json({ message: 'Nenhuma meta encontrada!' });
 
             res.status(200).json({ message: 'Meta encontrada com sucesso!', meta });
         } catch (err) {
             res.status(422).json({ message: 'Erro ao buscar meta' });
             console.log(err);
+        }
+    }
+
+    static async atualizarMeta(req, res) {
+        try {
+            const token = pegarToken(req);
+            const user = await pegarUserPorToken(token);
+            const { nome, valorMeta, prazoMeta, valorAtual } = req.body;
+
+            const meta = await MetaModel.findById(req.params.id);
+            
+            if (!nome && !valorMeta && !prazoMeta && !valorAtual) return res.status(422).json({ message: 'Nada para atualizar!' });
+
+            if (nome) {
+                const nomeExiste = await MetaModel.findOne({ $and: [{ nome: nome }, { 'user._id': user._id }] });
+                if (nomeExiste) return res.status(422).json({ message: 'Já existe uma meta com esse nome!' });
+                meta.nome = nome
+            };
+            if (valorMeta) {
+                meta.valorMeta = valorMeta
+            };
+            if (prazoMeta) {
+                umetaser.prazoMeta = prazoMeta
+            };
+            if (valorAtual) {
+                meta.valorAtual = valorAtual
+            };
+            
+            if (meta.user._id.toString() !== user._id.toString()) return res.status(422).json({ message: 'O usuário não é dono dessa meta!' });
+
+            const metaAtualizada = await MetaModel.findByIdAndUpdate(req.params.id, meta);
+            res.status(201).json({ message: 'A meta foi atualizado!' });
+        } catch (err) {
+            console.log(err);
+            res.status(422).json({ message: 'A meta não foi atualizado!' });
         }
     }
 }
