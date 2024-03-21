@@ -19,8 +19,8 @@ module.exports = class UserController {
             const salt = bcrypt.genSaltSync(10);
             const senhaHash = bcrypt.hashSync(senha, salt);
 
-            const emailExiste = await UserModel.find({ email: email });
-            if (emailExiste) return res.status(422).json({ message: "Usuário com esse nome já existe!" });
+            const emailExiste = await UserModel.findOne({ email: email });
+            if (emailExiste) return res.status(422).json({ message: "Usuário com esse email já existe!" });
 
             const user = await UserModel.create({
                 nome,
@@ -87,9 +87,31 @@ module.exports = class UserController {
 
             const userAtualizado = await UserModel.findByIdAndUpdate(user._id, user);
             res.status(201).json({ message: 'Usuário atualizado com sucesso!' });
-        }catch(err){
+        } catch (err) {
             console.log(err);
             res.status(422).json({ message: 'Usuário não encontrado' });
+        }
+    }
+
+    static async deletar(req, res) {
+        try {
+            const MetaModel = require('../models/Meta');
+            const token = pegarToken(req);
+            const user = await pegarUserPorToken(token);
+
+            const metasUsuario = await MetaModel.find({ 'user._id': user._id });
+
+            metasUsuario.forEach(async (meta) => {
+                await MetaModel.findByIdAndDelete(meta._id);
+            })
+
+            await UserModel.findByIdAndDelete(user._id);
+
+            res.status(200).json({ message: 'O usuário foi deletado com sucesso!' });
+            
+        } catch (err) {
+            console.log(err);
+            res.status(200).json({ message: 'O usuário não foi deletado!' });
         }
     }
 };

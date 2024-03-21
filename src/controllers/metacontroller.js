@@ -74,7 +74,7 @@ module.exports = class MetaController {
             const { nome, valorMeta, prazoMeta, valorAtual } = req.body;
 
             const meta = await MetaModel.findById(req.params.id);
-            
+
             if (!nome && !valorMeta && !prazoMeta && !valorAtual) return res.status(422).json({ message: 'Nada para atualizar!' });
 
             if (nome) {
@@ -91,7 +91,7 @@ module.exports = class MetaController {
             if (valorAtual) {
                 meta.valorAtual = valorAtual
             };
-            
+
             if (meta.user._id.toString() !== user._id.toString()) return res.status(422).json({ message: 'O usuário não é dono dessa meta!' });
 
             const metaAtualizada = await MetaModel.findByIdAndUpdate(req.params.id, meta);
@@ -99,6 +99,23 @@ module.exports = class MetaController {
         } catch (err) {
             console.log(err);
             res.status(422).json({ message: 'A meta não foi atualizado!' });
+        }
+    }
+
+    static async deletar(req, res) {
+        try {
+            const token = pegarToken(req);
+            const user = await pegarUserPorToken(token);
+
+            const meta = await MetaModel.findById(req.params.id);
+
+            if (meta.user._id.toString() !== user._id.toString()) return res.status(422).json({ message: 'O usuário não é dono dessa meta!' });
+
+            await MetaModel.findByIdAndDelete(req.params.id);
+            res.status(200).json({ message: 'A meta foi excluída com sucesso!' });
+        }catch(err){
+            console.log(err);
+            res.status(422).json({ message: 'A meta não foi excluída!' });
         }
     }
 }
