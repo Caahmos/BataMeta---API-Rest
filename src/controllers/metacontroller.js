@@ -102,6 +102,61 @@ module.exports = class MetaController {
         }
     }
 
+    static async adicionarValor(req, res) {
+        try {
+            let { valorNovo } = req.body;
+
+            if (!valorNovo) return res.status(422).json({ message: 'Nada para atualizar!' })
+
+            const token = pegarToken(req);
+            const user = await pegarUserPorToken(token);
+
+            const meta = await MetaModel.findById(req.params.id);
+            if (meta.user._id.toString() !== user._id.toString()) return res.status(422).json({ message: 'O usuário não é dono dessa meta!' });
+
+            const valorAtual = Number(meta.valorAtual);
+            const valorMeta = Number(meta.valorMeta);
+
+            valorNovo = valorAtual + Number(valorNovo);
+
+            if (valorNovo > valorMeta) {
+                valorNovo = valorMeta;
+            };
+
+            const valorAtualizado = await MetaModel.findByIdAndUpdate(meta._id, { valorAtual: valorNovo });
+            res.status(200).json({ message: 'Valor atualizado com sucesso!' })
+        } catch (err) {
+            res.status(422).json({ message: 'Valor não foi atualizado!' })
+        }
+    }
+
+    static async retirarValor(req, res) {
+        try {
+            let { valorNovo } = req.body;
+
+            if (!valorNovo) return res.status(422).json({ message: 'Nada para atualizar!' })
+
+            const token = pegarToken(req);
+            const user = await pegarUserPorToken(token);
+
+            const meta = await MetaModel.findById(req.params.id);
+            if (meta.user._id.toString() !== user._id.toString()) return res.status(422).json({ message: 'O usuário não é dono dessa meta!' });
+
+            const valorAtual = Number(meta.valorAtual);
+
+            valorNovo = valorAtual - Number(valorNovo);
+
+            if (valorNovo <= 0) {
+                valorNovo = 0;
+            };
+
+            const valorAtualizado = await MetaModel.findByIdAndUpdate(meta._id, { valorAtual: valorNovo });
+            res.status(200).json({ message: 'Valor atualizado com sucesso!' })
+        } catch (err) {
+            res.status(422).json({ message: 'Valor não foi atualizado!' })
+        }
+    }
+
     static async deletar(req, res) {
         try {
             const token = pegarToken(req);
@@ -113,7 +168,7 @@ module.exports = class MetaController {
 
             await MetaModel.findByIdAndDelete(req.params.id);
             res.status(200).json({ message: 'A meta foi excluída com sucesso!' });
-        }catch(err){
+        } catch (err) {
             console.log(err);
             res.status(422).json({ message: 'A meta não foi excluída!' });
         }

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const pegarToken = require('./pegarToken');
+require('dotenv').config();
 
 function verificarToken(req, res, next) {
     if (!req.headers.authorization) res.status(401).json({ message: 'Acesso negado!' });
@@ -9,7 +10,7 @@ function verificarToken(req, res, next) {
     if (!token) res.status(401).json({ message: 'Acesso negado!' });
 
     try {
-        const tokenValido = jwt.verify(token, 'supersegredosecreto123');
+        const tokenValido = jwt.verify(token, process.env.SECRET);
         req.user = tokenValido;
         next();
     } catch (err) {

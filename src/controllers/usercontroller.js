@@ -1,5 +1,7 @@
+require('dotenv').config();
 const UserModel = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const gerarToken = require('../helpers/gerarToken');
 const pegarToken = require('../helpers/pegarToken');
 const pegarUserPorToken = require('../helpers/pegarUserPorToken');
@@ -58,6 +60,29 @@ module.exports = class UserController {
         }
     }
 
+    static async checkUser(req, res) {
+        let user = '';
+
+        try {
+            if (req.headers.authorization) {
+
+                const token = pegarToken(req);
+                const verify = jwt.verify(token, process.env.SECRET);
+
+                user = await UserModel.findById(verify.id);
+
+                user.senha = undefined;
+
+            }else{
+                user = undefined;
+            }
+            res.status(200).send(user);
+        }catch(err){
+            res.status(422).json({ message: 'O usuário não foi autenticado!' });
+
+        }
+    }
+
     static async atualizar(req, res) {
         try {
             const { nome, sobrenome, email, senha, confirmarSenha } = req.body;
@@ -108,7 +133,7 @@ module.exports = class UserController {
             await UserModel.findByIdAndDelete(user._id);
 
             res.status(200).json({ message: 'O usuário foi deletado com sucesso!' });
-            
+
         } catch (err) {
             console.log(err);
             res.status(200).json({ message: 'O usuário não foi deletado!' });

@@ -6,6 +6,9 @@ const { imageUpload } = require('../src/helpers/imageUpload');
 
 route.post('/registrar', UserController.registrar);
 route.post('/entrar', UserController.entrar);
+
+route.get('/checkUser', UserController.checkUser);
+
 route.patch('/atualizar/:id', verificarToken, imageUpload.single('image'), UserController.atualizar);
 route.delete('/apagar/:id', verificarToken, UserController.deletar );
 
