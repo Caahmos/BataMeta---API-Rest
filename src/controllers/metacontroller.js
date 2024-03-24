@@ -57,7 +57,7 @@ module.exports = class MetaController {
             const token = pegarToken(req);
             const user = await pegarUserPorToken(token);
 
-            const meta = await MetaModel.findById(req.params.id);
+            const meta = await MetaModel.findOne({ $and: [{ 'user._id': user._id }, { _id: req.params.id }]});
             if (!meta) return res.status(422).json({ message: 'Nenhuma meta encontrada!' });
 
             res.status(200).json({ message: 'Meta encontrada com sucesso!', meta });
